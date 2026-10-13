@@ -1,0 +1,30 @@
+name: Build
+# Every pull request and every push to master: lint, tests, type check and production build. The "Build" check is
+# required to merge into master (branch protection).
+on:
+  pull_request:
+  push:
+    branches: [master]
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - name: 🛠 Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - name: Dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Tests
+        run: npm test
+      - name: Type check and build
+        run: npm run build

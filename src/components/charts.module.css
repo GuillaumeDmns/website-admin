@@ -1,0 +1,237 @@
+.chart {
+  display: grid;
+  /* Not widened by the labels of its days */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.4rem;
+  min-width: 0;
+  margin: 0;
+}
+
+.plot {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.6rem;
+}
+
+.axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 2.5rem;
+  white-space: nowrap;
+  color: var(--ink-soft);
+  font-size: 0.75rem;
+  text-align: right;
+  /* The labels sit on the grid lines */
+  margin: -0.5em 0;
+}
+
+.area {
+  position: relative;
+  display: flex;
+  gap: 2px;
+  align-items: stretch;
+  min-width: 0;
+  border-bottom: 1px solid var(--ink-soft);
+}
+
+.grid {
+  position: absolute;
+  inset: 0;
+  border-top: 1px dashed var(--rule);
+  pointer-events: none;
+}
+
+.grid::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  border-top: 1px dashed var(--rule);
+}
+
+.column {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column-reverse;
+  min-width: 0;
+}
+
+.column:hover {
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+}
+
+.segment {
+  width: 100%;
+  min-height: 1px;
+}
+
+.lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.lines polyline {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.xLabels {
+  display: flex;
+  gap: 2px;
+  overflow: clip;
+  margin-left: calc(2.5rem + 0.6rem);
+  color: var(--ink-soft);
+  font-size: 0.75rem;
+}
+
+.xLabels span {
+  flex: 1;
+  min-width: 0;
+  overflow: visible;
+  white-space: nowrap;
+  text-align: center;
+}
+
+/* The labels at the ends stay inside the chart */
+.xLabels span:first-child {
+  text-align: left;
+}
+
+.xLabels span:last-child {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1.1rem;
+  margin: 0.3rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.85rem;
+}
+
+.legend li {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.swatch {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 2px;
+}
+
+.data {
+  font-size: 0.85rem;
+}
+
+.data summary {
+  width: fit-content;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.csv {
+  margin: 0.6rem 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.dataTable {
+  max-height: 18rem;
+  overflow: auto;
+}
+
+.dataTable table {
+  border-collapse: collapse;
+}
+
+.dataTable th,
+.dataTable td {
+  padding: 0.2rem 1rem 0.2rem 0;
+  border-bottom: 1px solid var(--rule);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.dataTable th[scope="row"],
+.dataTable thead th:first-child {
+  text-align: left;
+  font-weight: 400;
+}
+
+.sparkline {
+  display: block;
+  width: 100%;
+  height: 2rem;
+  overflow: visible;
+}
+
+.sparkline polyline {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.hbars {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hbars li {
+  display: grid;
+  grid-template-columns: minmax(6rem, 14rem) 1fr auto;
+  gap: 0.75rem;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.hlabel {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.htrack {
+  height: 0.6rem;
+  background: var(--surface);
+  border-radius: 2px;
+}
+
+.hfill {
+  display: block;
+  height: 100%;
+  min-width: 1px;
+  background: var(--series-1);
+  border-radius: 2px;
+}
+
+.hvalue {
+  min-width: 3rem;
+  color: var(--ink-soft);
+  text-align: right;
+}

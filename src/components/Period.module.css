@@ -1,0 +1,23 @@
+.period {
+  display: inline-flex;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+
+.period button {
+  padding: 0.3rem 0.75rem;
+  border: 0;
+  background: none;
+  color: var(--ink-soft);
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.period button + button {
+  border-left: 1px solid var(--rule);
+}
+
+.period button[aria-pressed="true"] {
+  background: var(--surface);
+  color: var(--ink);
+}

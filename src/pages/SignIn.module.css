@@ -1,0 +1,26 @@
+.page {
+  display: grid;
+  align-content: center;
+  gap: 1.25rem;
+  max-width: 34rem;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: 2rem var(--gutter);
+}
+
+.page h1 {
+  font-size: clamp(2rem, 6vw, 2.8rem);
+}
+
+.lead {
+  color: var(--ink-soft);
+}
+
+.message {
+  color: var(--bad);
+}
+
+.button {
+  min-height: 44px;
+}
