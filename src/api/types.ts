@@ -136,6 +136,8 @@ export interface Network {
 }
 
 export interface SystemInfo {
+  /** The backend's release ("0.6.0"), "dev" for a build without tag */
+  version: string;
   java: string;
   springBoot: string;
   builtAt: string | null;

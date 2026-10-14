@@ -134,6 +134,9 @@ describe("App", () => {
 
     fireEvent.click(screen.getByRole("link", { name: "Système" }));
     expect(await screen.findByText("Coupé", { exact: false })).toBeTruthy();
+    expect(screen.getByText("0.6.0")).toBeTruthy();
+    // This site's own release: none in the tests
+    expect(screen.getByText(/Administration dev/)).toBeTruthy();
 
     fireEvent.click(screen.getByRole("link", { name: "Quotas PRIM" }));
     expect(await screen.findByRole("heading", { name: "Appels par jour" })).toBeTruthy();

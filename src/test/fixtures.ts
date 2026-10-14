@@ -131,6 +131,7 @@ export const quotas = (): Quotas => ({
 });
 
 export const system = (): SystemInfo => ({
+  version: "0.6.0",
   java: "25.0.1+8",
   springBoot: "4.1.1",
   builtAt: "2026-10-12T07:00:00Z",

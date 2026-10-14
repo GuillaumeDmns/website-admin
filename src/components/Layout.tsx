@@ -1,7 +1,7 @@
 import { NavLink, Outlet, ScrollRestoration } from "react-router-dom";
 
 import { useSession } from "../auth/sessionContext";
-import { apiUrl } from "../config";
+import { apiUrl, appVersion } from "../config";
 import { useRefresh } from "../data";
 import styles from "./Layout.module.css";
 
@@ -59,7 +59,9 @@ export default function Layout() {
 
       <footer className={styles.footer}>
         <span>Statistiques anonymes : des comptes, jamais une personne.</span>
-        <span>API : {new URL(apiUrl).host}</span>
+        <span>
+          Administration {appVersion} · API : {new URL(apiUrl).host}
+        </span>
       </footer>
       <ScrollRestoration />
     </div>

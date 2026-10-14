@@ -10,3 +10,6 @@ export const googleClientId: string =
 
 /** Data reloaded this often while the page is shown and auto refresh is on */
 export const refreshInterval = 60_000;
+
+/** The release of this site, from the git tag vX.Y.Z (deploy workflow), "dev" otherwise */
+export const appVersion: string = import.meta.env.VITE_APP_VERSION || "dev";

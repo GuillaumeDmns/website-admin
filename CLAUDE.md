@@ -32,7 +32,7 @@ Statistics are anonymous: the backend only sends counts (never an account's emai
 
 ## Deployment
 
-Tag `v*` on master → `.github/workflows/deploy.yml` (like website-react's): build, archive in the tag's GitHub release, downloaded by the VPS (`deploy` user) into `/var/www/guillaumedamiens-admin/releases/<name>`, `current` switched, 5 releases kept, pages checked over HTTPS. nginx site `admin.guillaumedamiens.com` in website-back's `deploy/nginx/` (Content-Security-Policy: this origin, the API and Google's sign-in only; `noindex`).
+Tag `vX.Y.Z` on master (the release: refused otherwise, `VITE_APP_VERSION`, shown at the bottom of the pages with `config.ts`'s `appVersion`, "dev" otherwise; the backend's own release is on the system page) → `.github/workflows/deploy.yml` (like website-react's): build, archive in the tag's GitHub release, downloaded by the VPS (`deploy` user) into `/var/www/guillaumedamiens-admin/releases/<name>`, `current` switched, 5 releases kept, pages checked over HTTPS. nginx site `admin.guillaumedamiens.com` in website-back's `deploy/nginx/` (Content-Security-Policy: this origin, the API and Google's sign-in only; `noindex`).
 
 ## Design
 
