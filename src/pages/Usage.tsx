@@ -17,7 +17,7 @@ export default function Usage() {
 
   return (
     <>
-      <PageTitle title="Utilisation">
+      <PageTitle title="Quotas PRIM">
         Les appels de l'application aux API d'Île-de-France Mobilités (PRIM), qui ont chacune un quota par jour : ce que coûte l'usage de
         l'application. Les invités (sans compte) n'ont droit qu'à 15 % de chaque quota.
       </PageTitle>

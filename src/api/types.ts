@@ -136,6 +136,8 @@ export interface Network {
 }
 
 export interface SystemInfo {
+  /** The backend's release ("0.6.0"), "dev" for a build without tag */
+  version: string;
   java: string;
   springBoot: string;
   builtAt: string | null;
@@ -190,4 +192,49 @@ export interface Account {
 export interface ActionResult {
   at: string;
   count: number | null;
+}
+
+export interface HourRequests {
+  /** Instant of the hour (UTC) */
+  hour: string;
+  requests: number;
+  clientErrors: number;
+  serverErrors: number;
+  rateLimited: number;
+  totalMillis: number;
+}
+
+export interface EndpointRequests {
+  /** "GET /api/v2/stops/{stopAreaId}/departures" */
+  endpoint: string;
+  requests: number;
+  clientErrors: number;
+  serverErrors: number;
+  rateLimited: number;
+  totalMillis: number;
+  maxMillis: number;
+}
+
+export type Caller = "ACCOUNT" | "GUEST" | "ANONYMOUS";
+
+export interface ApiUsage {
+  perHour: HourRequests[];
+  endpoints: EndpointRequests[];
+  callers: { day: string; caller: Caller; requests: number }[];
+}
+
+/** Distinct members of a metric on a day: active:account, active:guest, platform:android, version:0.4.0, visitors:<site> */
+export interface MetricCount {
+  day: string;
+  metric: string;
+  count: number;
+}
+
+export interface Audience {
+  metrics: MetricCount[];
+  viewsPerDay: { day: string; host: string; views: number }[];
+  pages: { host: string; path: string; views: number }[];
+  referrers: { host: string; referrer: string; views: number }[];
+  /** When the page log of nginx was last read, null when it isn't (development) */
+  pagesReadAt: string | null;
 }

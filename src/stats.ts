@@ -1,7 +1,9 @@
 // What the pages compute from the backend's answers: series per day, totals, labels, and the alerts of the overview.
 
 import type {
+  Caller,
   DayCount,
+  MetricCount,
   Feature,
   GtfsImport,
   Network,
@@ -261,4 +263,46 @@ export function alerts(
     }
   }
   return found.sort((a, b) => (a.tone === b.tone ? 0 : a.tone === "bad" ? -1 : 1));
+}
+
+/** A metric per day (a day may come twice: its closed count and late members, added up) */
+export function metricPerDay(metrics: MetricCount[], metric: string, days: string[]): number[] {
+  return days.map((day) => sum(metrics.filter((entry) => entry.metric === metric && entry.day === day).map((entry) => entry.count)));
+}
+
+/** The values after a prefix ("platform:android" → "android") with their count on [day], biggest first */
+export function metricGroups(metrics: MetricCount[], prefix: string, day: string): { name: string; count: number }[] {
+  const counts = new Map<string, number>();
+  for (const entry of metrics) {
+    if (entry.day === day && entry.metric.startsWith(prefix)) {
+      const name = entry.metric.slice(prefix.length);
+      counts.set(name, (counts.get(name) ?? 0) + entry.count);
+    }
+  }
+  return [...counts].map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+}
+
+/** The sites seen in the visits, the main one first */
+export function sites(hosts: string[]): string[] {
+  return [...new Set(hosts)].sort((a, b) => a.length - b.length || a.localeCompare(b));
+}
+
+export const CALLER_LABELS: Record<Caller, string> = {
+  ACCOUNT: "Comptes",
+  GUEST: "Invités",
+  ANONYMOUS: "Sans jeton",
+};
+
+export const PLATFORM_LABELS: Record<string, string> = {
+  android: "Android",
+  ios: "iOS",
+  web: "Web",
+  linux: "Linux",
+  macos: "macOS",
+  windows: "Windows",
+};
+
+/** A day of the hours (UTC instants) in Paris, as an ISO date */
+export function parisDayOf(instant: string): string {
+  return parisDate(Date.parse(instant));
 }

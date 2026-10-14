@@ -1,13 +1,15 @@
 import { NavLink, Outlet, ScrollRestoration } from "react-router-dom";
 
 import { useSession } from "../auth/sessionContext";
-import { apiUrl } from "../config";
+import { apiUrl, appVersion } from "../config";
 import { useRefresh } from "../data";
 import styles from "./Layout.module.css";
 
 const navigation = [
   { to: "/", label: "Vue d'ensemble", end: true },
-  { to: "/usage", label: "Utilisation" },
+  { to: "/audience", label: "Audience" },
+  { to: "/usage", label: "Quotas PRIM" },
+  { to: "/api", label: "API" },
   { to: "/accounts", label: "Comptes" },
   { to: "/network", label: "Réseau" },
   { to: "/system", label: "Système" },
@@ -57,7 +59,9 @@ export default function Layout() {
 
       <footer className={styles.footer}>
         <span>Statistiques anonymes : des comptes, jamais une personne.</span>
-        <span>API : {new URL(apiUrl).host}</span>
+        <span>
+          Administration {appVersion} · API : {new URL(apiUrl).host}
+        </span>
       </footer>
       <ScrollRestoration />
     </div>

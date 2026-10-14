@@ -26,9 +26,13 @@ export default function SystemPage() {
                 <Grid>
                   <Kpi label="En marche depuis" value={duration(data.uptimeSeconds)} detail={`démarré le ${dateTime(data.startedAt)}`} />
                   <Kpi
-                    label="Version"
-                    value={data.builtAt ? shortDay(parisDate(Date.parse(data.builtAt))) : "—"}
-                    detail={data.builtAt ? `jar construit à ${time(data.builtAt).slice(0, 5)}` : "jar sans date de construction"}
+                    label="Version du serveur"
+                    value={data.version}
+                    detail={
+                      data.builtAt
+                        ? `jar construit le ${shortDay(parisDate(Date.parse(data.builtAt)))} à ${time(data.builtAt).slice(0, 5)}`
+                        : "jar sans date de construction"
+                    }
                   />
                   <Kpi label="Java" value={data.java.split("+")[0]} detail={`Spring Boot ${data.springBoot}`} />
                   <Kpi

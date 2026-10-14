@@ -94,8 +94,8 @@ function Axis({ max, format }: { max: number; format: (value: number) => string 
 }
 
 function XLabels({ labels }: { labels: string[] }) {
-  // About 8 labels at most, the last one always
-  const every = Math.max(1, Math.ceil(labels.length / 8));
+  // About 5 labels at most (charts can be half the page wide), the last one always
+  const every = Math.max(1, Math.ceil(labels.length / 5));
   return (
     <div className={styles.xLabels} aria-hidden="true">
       {labels.map((label, index) => (

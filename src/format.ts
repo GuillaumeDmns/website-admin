@@ -3,7 +3,7 @@
 const integer = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
 const decimal = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 1 });
 const compactFormat = new Intl.NumberFormat("fr-FR", { notation: "compact", maximumFractionDigits: 1 });
-const percentFormat = new Intl.NumberFormat("fr-FR", { style: "percent", maximumFractionDigits: 0 });
+const percentFormat = new Intl.NumberFormat("fr-FR", { style: "percent", maximumFractionDigits: 1 });
 const preciseDecimal = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 });
 const dayFormat = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", timeZone: "UTC" });
 const longDayFormat = new Intl.DateTimeFormat("fr-FR", {
