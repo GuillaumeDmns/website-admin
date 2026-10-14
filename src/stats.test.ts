@@ -3,6 +3,9 @@ import {
   alerts,
   callsPerApi,
   callsPerFeature,
+  metricGroups,
+  metricPerDay,
+  sites,
   cumulative,
   dayRange,
   fillDays,
@@ -111,5 +114,36 @@ describe("stats", () => {
     expect(siteTone({ ...site, status: 502 })).toBe("bad");
     expect(siteTone({ ...site, status: 404 })).toBe("warn");
     expect(siteTone({ ...site, certificateExpiry: new Date(Date.now() + 3 * 86_400_000).toISOString() })).toBe("bad");
+  });
+
+  it("adds up a metric's rows per day (a closed day and its late members)", () => {
+    const metrics = [
+      { day: "2026-10-13", metric: "active:guest", count: 10 },
+      { day: "2026-10-13", metric: "active:guest", count: 2 },
+      { day: "2026-10-14", metric: "active:guest", count: 7 },
+      { day: "2026-10-14", metric: "active:account", count: 3 },
+    ];
+    expect(metricPerDay(metrics, "active:guest", ["2026-10-12", "2026-10-13", "2026-10-14"])).toEqual([0, 12, 7]);
+  });
+
+  it("lists the platforms or versions of a day, the most used first", () => {
+    const metrics = [
+      { day: "2026-10-14", metric: "version:0.4.0", count: 2 },
+      { day: "2026-10-14", metric: "version:0.5.0", count: 9 },
+      { day: "2026-10-13", metric: "version:0.3.0", count: 4 },
+      { day: "2026-10-14", metric: "platform:android", count: 9 },
+    ];
+    expect(metricGroups(metrics, "version:", "2026-10-14")).toEqual([
+      { name: "0.5.0", count: 9 },
+      { name: "0.4.0", count: 2 },
+    ]);
+  });
+
+  it("puts the main site first", () => {
+    expect(sites(["app.guillaumedamiens.com", "guillaumedamiens.com", "admin.guillaumedamiens.com", "guillaumedamiens.com"])).toEqual([
+      "guillaumedamiens.com",
+      "app.guillaumedamiens.com",
+      "admin.guillaumedamiens.com",
+    ]);
   });
 });

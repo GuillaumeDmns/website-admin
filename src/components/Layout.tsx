@@ -7,7 +7,9 @@ import styles from "./Layout.module.css";
 
 const navigation = [
   { to: "/", label: "Vue d'ensemble", end: true },
-  { to: "/usage", label: "Utilisation" },
+  { to: "/audience", label: "Audience" },
+  { to: "/usage", label: "Quotas PRIM" },
+  { to: "/api", label: "API" },
   { to: "/accounts", label: "Comptes" },
   { to: "/network", label: "Réseau" },
   { to: "/system", label: "Système" },

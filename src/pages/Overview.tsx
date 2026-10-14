@@ -1,11 +1,23 @@
 import { Link } from "react-router-dom";
 
-import type { Accounts, LineTraffic, Network, Quotas, Sites, Status, SystemInfo } from "../api/types";
+import type { Accounts, Audience, LineTraffic, Network, Quotas, Sites, Status, SystemInfo } from "../api/types";
 import { Sparkline } from "../components/charts";
 import { Grid, Kpi, Load, Meter, Note, PageTitle, Section, StatusBadge } from "../components/ui";
 import { useApi } from "../data";
 import { bytes, compact, dateTime, duration, number, percent, relative, time } from "../format";
-import { alerts, API_LABELS, callsPerApi, certificateTone, cumulative, dayRange, fillDays, siteTone, sum, usageTone } from "../stats";
+import {
+  alerts,
+  API_LABELS,
+  callsPerApi,
+  certificateTone,
+  cumulative,
+  dayRange,
+  fillDays,
+  metricPerDay,
+  siteTone,
+  sum,
+  usageTone,
+} from "../stats";
 import styles from "./pages.module.css";
 
 export default function Overview() {
@@ -16,6 +28,7 @@ export default function Overview() {
   const sites = useApi<Sites>("/api/admin/stats/sites");
   const network = useApi<Network>("/api/admin/stats/network");
   const traffic = useApi<LineTraffic[]>("/api/v2/traffic");
+  const audience = useApi<Audience>("/api/admin/stats/audience?days=30");
 
   const found = alerts({ status: status.data, system: system.data, sites: sites.data?.sites, network: network.data });
   const days = dayRange(30);
@@ -45,6 +58,34 @@ export default function Overview() {
 
       <Section title="Chiffres clés" id="kpis">
         <Grid>
+          <Load resource={audience} label="l'audience">
+            {(data) => {
+              const accountsPerDay = metricPerDay(data.metrics, "active:account", days);
+              const guestsPerDay = metricPerDay(data.metrics, "active:guest", days);
+              const users = days.map((_, index) => accountsPerDay[index] + guestsPerDay[index]);
+              const visitors = days.map((day) =>
+                sum(data.metrics.filter((entry) => entry.day === day && entry.metric.startsWith("visitors:")).map((entry) => entry.count)),
+              );
+              return (
+                <>
+                  <Kpi
+                    label="Utilisateurs de l'app aujourd'hui"
+                    value={number(users.at(-1) ?? 0)}
+                    detail="comptes et appareils invités"
+                    to="/audience"
+                    chart={<Sparkline values={users} label="Utilisateurs par jour sur 30 jours" />}
+                  />
+                  <Kpi
+                    label="Visiteurs des sites aujourd'hui"
+                    value={number(visitors.at(-1) ?? 0)}
+                    detail="site, app web et admin"
+                    to="/audience"
+                    chart={<Sparkline values={visitors} label="Visiteurs par jour sur 30 jours" />}
+                  />
+                </>
+              );
+            }}
+          </Load>
           <Load resource={accounts} label="des comptes">
             {({ counts, signUps }) => (
               <>

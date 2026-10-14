@@ -1,6 +1,18 @@
 // Answers of the backend as it sends them, for the tests
 
-import type { Accounts, Favorites, GtfsImport, LineTraffic, Network, Quotas, Sites, Status, SystemInfo } from "../api/types";
+import type {
+  Accounts,
+  ApiUsage,
+  Audience,
+  Favorites,
+  GtfsImport,
+  LineTraffic,
+  Network,
+  Quotas,
+  Sites,
+  Status,
+  SystemInfo,
+} from "../api/types";
 
 /** An unsigned JWT with these claims (the page reads them, the backend checks them) */
 export function jwt(claims: Record<string, unknown>): string {
@@ -186,3 +198,47 @@ export const traffic = (): LineTraffic[] => [
 ];
 
 export const imports = (): GtfsImport[] => [gtfsImport];
+
+const today = () => new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Paris" });
+
+export const audience = (): Audience => ({
+  metrics: [
+    { day: today(), metric: "active:account", count: 4 },
+    { day: today(), metric: "active:guest", count: 11 },
+    { day: today(), metric: "platform:android", count: 9 },
+    { day: today(), metric: "platform:web", count: 6 },
+    { day: today(), metric: "version:0.5.0", count: 8 },
+    { day: today(), metric: "version:dev", count: 1 },
+    { day: today(), metric: "visitors:guillaumedamiens.com", count: 23 },
+    { day: today(), metric: "visitors:app.guillaumedamiens.com", count: 5 },
+  ],
+  viewsPerDay: [{ day: today(), host: "guillaumedamiens.com", views: 41 }],
+  pages: [{ host: "guillaumedamiens.com", path: "/photos", views: 17 }],
+  referrers: [{ host: "guillaumedamiens.com", referrer: "linkedin.com", views: 6 }],
+  pagesReadAt: new Date().toISOString(),
+});
+
+export const apiUsage = (): ApiUsage => ({
+  perHour: [
+    {
+      hour: new Date(Date.now() - 3_600_000).toISOString(),
+      requests: 1200,
+      clientErrors: 30,
+      serverErrors: 2,
+      rateLimited: 5,
+      totalMillis: 96_000,
+    },
+  ],
+  endpoints: [
+    {
+      endpoint: "GET /api/v2/stops/{stopAreaId}/departures",
+      requests: 800,
+      clientErrors: 10,
+      serverErrors: 2,
+      rateLimited: 3,
+      totalMillis: 64_000,
+      maxMillis: 900,
+    },
+  ],
+  callers: [{ day: today(), caller: "GUEST", requests: 700 }],
+});

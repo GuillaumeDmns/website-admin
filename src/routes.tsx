@@ -3,6 +3,8 @@ import type { RouteObject } from "react-router-dom";
 import Layout from "./components/Layout";
 import AccountsPage from "./pages/AccountsPage";
 import Actions from "./pages/Actions";
+import ApiPage from "./pages/ApiPage";
+import AudiencePage from "./pages/AudiencePage";
 import NetworkPage from "./pages/NetworkPage";
 import NotFound from "./pages/NotFound";
 import Overview from "./pages/Overview";
@@ -15,7 +17,9 @@ export const routes: RouteObject[] = [
     element: <Layout />,
     children: [
       { index: true, element: <Overview /> },
+      { path: "audience", element: <AudiencePage /> },
       { path: "usage", element: <Usage /> },
+      { path: "api", element: <ApiPage /> },
       { path: "accounts", element: <AccountsPage /> },
       { path: "network", element: <NetworkPage /> },
       { path: "system", element: <SystemPage /> },

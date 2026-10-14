@@ -22,6 +22,8 @@ function standardBackend(): FakeBackend {
   backend.on("GET", "/api/admin/stats/network", { body: fixtures.network() });
   backend.on("GET", "/api/v2/traffic", { body: fixtures.traffic() });
   backend.on("GET", "/api/gtfs/imports", { body: fixtures.imports() });
+  backend.on("GET", "/api/admin/stats/audience", { body: fixtures.audience() });
+  backend.on("GET", "/api/admin/stats/usage", { body: fixtures.apiUsage() });
   return backend;
 }
 
@@ -112,6 +114,9 @@ describe("App", () => {
     expect(within(alerts).getByText(/Véhicules \(estimated-timetable\) : 96/)).toBeTruthy();
     const kpis = screen.getByRole("region", { name: "Chiffres clés" });
     expect(await within(kpis).findByText("42")).toBeTruthy();
+    // 4 accounts and 11 guest devices today; 23 + 5 visitors of the sites
+    expect(await within(kpis).findByText("15")).toBeTruthy();
+    expect(within(kpis).getByText("28")).toBeTruthy();
     expect(within(kpis).getByText("2 / 2")).toBeTruthy();
   });
 
@@ -130,8 +135,16 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("link", { name: "Système" }));
     expect(await screen.findByText("Coupé", { exact: false })).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("link", { name: "Utilisation" }));
+    fireEvent.click(screen.getByRole("link", { name: "Quotas PRIM" }));
     expect(await screen.findByRole("heading", { name: "Appels par jour" })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("link", { name: "Audience" }));
+    expect(await screen.findByText("linkedin.com")).toBeTruthy();
+    expect(screen.getByText("Visiteurs de guillaumedamiens.com")).toBeTruthy();
+    expect(screen.getByText("Android")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("link", { name: "API" }));
+    expect(await screen.findByText("GET /api/v2/stops/{stopAreaId}/departures")).toBeTruthy();
   });
 
   it("runs an action once confirmed", async () => {
