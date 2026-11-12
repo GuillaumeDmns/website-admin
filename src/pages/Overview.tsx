@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-import type { Accounts, Audience, LineTraffic, Network, Quotas, Sites, Status, SystemInfo } from "../api/types";
+import type { Accounts, Audience, LineTraffic, Network, Quotas, Security, Sites, Status, SystemInfo } from "../api/types";
 import { Sparkline } from "../components/charts";
 import { Grid, Kpi, Load, Meter, Note, PageTitle, Section, StatusBadge } from "../components/ui";
 import { useApi } from "../data";
@@ -29,8 +29,15 @@ export default function Overview() {
   const network = useApi<Network>("/api/admin/stats/network");
   const traffic = useApi<LineTraffic[]>("/api/v2/traffic");
   const audience = useApi<Audience>("/api/admin/stats/audience?days=30");
+  const security = useApi<Security>("/api/admin/stats/security");
 
-  const found = alerts({ status: status.data, system: system.data, sites: sites.data?.sites, network: network.data });
+  const found = alerts({
+    status: status.data,
+    system: system.data,
+    sites: sites.data?.sites,
+    network: network.data,
+    security: security.data,
+  });
   const days = dayRange(30);
 
   return (

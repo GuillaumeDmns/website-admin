@@ -24,6 +24,9 @@ function standardBackend(): FakeBackend {
   backend.on("GET", "/api/gtfs/imports", { body: fixtures.imports() });
   backend.on("GET", "/api/admin/stats/audience", { body: fixtures.audience() });
   backend.on("GET", "/api/admin/stats/usage", { body: fixtures.apiUsage() });
+  backend.on("GET", "/api/admin/stats/security", { body: fixtures.security() });
+  backend.on("GET", "/api/v2/me/api-tokens", { body: fixtures.apiTokens() });
+  backend.on("GET", "/api/v2/me/sessions", { body: { active: 3 } });
   return backend;
 }
 
@@ -161,8 +164,95 @@ describe("App", () => {
     expect(backend.requests.some((request) => request.path === "/api/admin/actions/traffic")).toBe(false);
     fireEvent.click(screen.getByRole("button", { name: "Confirmer" }));
 
-    expect(await screen.findAllByText(/Info trafic relue à 12:00:00/)).toHaveLength(2);
+    expect(await screen.findByText(/Info trafic relue à 12:00:00/)).toBeTruthy();
     expect(backend.requests.filter((request) => request.path === "/api/admin/actions/traffic")).toHaveLength(1);
+  });
+
+  it("shows the server's journal of admin actions", async () => {
+    standardBackend();
+    localStorage.setItem("admin.refreshToken", "stored");
+    localStorage.setItem("admin.journal", "[]");
+    renderApp("/actions");
+
+    const journal = await screen.findByRole("region", { name: "Journal" });
+    expect(await within(journal).findByText(/Reconstruire l'index de recherche : 2 515/)).toBeTruthy();
+    expect(within(journal).getByText(/un import était déjà en cours/)).toBeTruthy();
+    // The former local journal is dropped
+    expect(localStorage.getItem("admin.journal")).toBeNull();
+  });
+
+  it("shows what the backend refused and who can get in", async () => {
+    standardBackend();
+    localStorage.setItem("admin.refreshToken", "stored");
+    renderApp();
+    await screen.findByRole("heading", { name: "Vue d'ensemble" });
+
+    // 27 forged access tokens today: worth a look from the overview
+    const alerts = await screen.findByRole("region", { name: "À surveiller" });
+    expect(await within(alerts).findByText(/Jeton d'accès falsifié : 27 aujourd'hui/)).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("link", { name: "Sécurité" }));
+    const refusals = await screen.findByRole("region", { name: "Refus" });
+    expect(await within(refusals).findByText("Session réutilisée")).toBeTruthy();
+    expect(within(refusals).getByText("31")).toBeTruthy();
+    const access = screen.getByRole("region", { name: "Accès" });
+    expect(within(access).getByText("64")).toBeTruthy();
+    expect(await screen.findByText("Bruno")).toBeTruthy();
+    expect(await screen.findByText(/3 sessions ouvertes/)).toBeTruthy();
+  });
+
+  it("creates an API token shown once, and revokes one", async () => {
+    const backend = standardBackend();
+    backend.on("POST", "/api/v2/me/api-tokens", (body) => ({
+      status: 201,
+      body: {
+        apiToken: {
+          id: 8,
+          name: (body as { name: string }).name,
+          createdAt: "2026-11-12T10:00:00Z",
+          expiresAt: "2027-02-10T10:00:00Z",
+          lastUsedAt: null,
+        },
+        token: "gdpat_secret-value",
+      },
+    }));
+    backend.on("DELETE", "/api/v2/me/api-tokens/7", { status: 204 });
+    localStorage.setItem("admin.refreshToken", "stored");
+    renderApp("/security");
+    await screen.findByText("Bruno");
+
+    fireEvent.change(screen.getByLabelText("Nom"), { target: { value: " Script " } });
+    fireEvent.click(screen.getByRole("button", { name: "Créer un jeton" }));
+
+    expect(await screen.findByText("gdpat_secret-value")).toBeTruthy();
+    expect(backend.requests.find((request) => request.method === "POST" && request.path === "/api/v2/me/api-tokens")?.body).toEqual({
+      name: "Script",
+      validDays: 90,
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Masquer" }));
+    expect(screen.queryByText("gdpat_secret-value")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Révoquer" }));
+    expect(backend.requests.some((request) => request.method === "DELETE")).toBe(false);
+    fireEvent.click(screen.getByRole("button", { name: "Révoquer « Bruno »" }));
+    expect(await screen.findByText("Jeton « Bruno » révoqué.")).toBeTruthy();
+    expect(backend.requests.filter((request) => request.method === "DELETE" && request.path === "/api/v2/me/api-tokens/7")).toHaveLength(1);
+  });
+
+  it("signs out everywhere once confirmed", async () => {
+    const backend = standardBackend();
+    backend.on("DELETE", "/api/v2/me/sessions", { body: { closed: 3 } });
+    localStorage.setItem("admin.refreshToken", "stored");
+    fakeGoogle();
+    renderApp("/security");
+    await screen.findByText(/3 sessions ouvertes/);
+
+    fireEvent.click(screen.getByRole("button", { name: "Se déconnecter partout" }));
+    fireEvent.click(screen.getByRole("button", { name: "Fermer toutes mes sessions" }));
+
+    expect(await screen.findByRole("heading", { name: "Administration" })).toBeTruthy();
+    expect(backend.requests.some((request) => request.method === "DELETE" && request.path === "/api/v2/me/sessions")).toBe(true);
+    expect(localStorage.getItem("admin.refreshToken")).toBeNull();
   });
 
   it("tells when a GTFS import already runs", async () => {

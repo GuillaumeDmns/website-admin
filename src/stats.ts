@@ -9,13 +9,15 @@ import type {
   Network,
   PrimApi,
   QuotaDay,
+  Security,
+  SecurityEventKind,
   Severity,
   SiteCheck,
   Status,
   SystemInfo,
   TransportMode,
 } from "./api/types";
-import { addDays, daysBetween, parisDate, percent, relative } from "./format";
+import { addDays, daysBetween, number, parisDate, percent, relative } from "./format";
 
 export const FEATURES: { feature: Feature; label: string }[] = [
   { feature: "DEPARTURES", label: "Départs" },
@@ -181,10 +183,16 @@ export const GTFS_MIN_FREE_DISK = 6 * 1024 ** 3;
 
 /** What needs a look, worst first */
 export function alerts(
-  { status, system, sites, network }: { status?: Status; system?: SystemInfo; sites?: SiteCheck[]; network?: Network },
+  {
+    status,
+    system,
+    sites,
+    network,
+    security,
+  }: { status?: Status; system?: SystemInfo; sites?: SiteCheck[]; network?: Network; security?: Security },
   now = Date.now(),
 ): Alert[] {
-  const found: Alert[] = [];
+  const found: Alert[] = [...securityAlerts(security)];
   if (status) {
     if (status.gtfsStale) {
       found.push({
@@ -306,3 +314,82 @@ export const PLATFORM_LABELS: Record<string, string> = {
 export function parisDayOf(instant: string): string {
   return parisDate(Date.parse(instant));
 }
+
+/** What the backend counts of refused credentials and access, with what it means */
+export const SECURITY_EVENTS: { kind: SecurityEventKind; label: string; description: string }[] = [
+  {
+    kind: "REFRESH_TOKEN_REUSED",
+    label: "Session réutilisée",
+    description: "Un jeton de session déjà échangé revient : probablement volé. Toutes les sessions du compte ont été fermées.",
+  },
+  {
+    kind: "JWT_REFUSED",
+    label: "Jeton d'accès falsifié",
+    description: "Signature fausse ou jeton illisible (un jeton expiré n'est pas compté).",
+  },
+  {
+    kind: "ACCESS_DENIED",
+    label: "Accès refusé",
+    description: "Un compte ou un invité a demandé ce qui ne lui est pas ouvert (l'administration surtout).",
+  },
+  {
+    kind: "GOOGLE_TOKEN_REFUSED",
+    label: "Connexion Google refusée",
+    description: "Jeton Google invalide, expiré ou fait pour une autre application.",
+  },
+  {
+    kind: "REFRESH_TOKEN_REFUSED",
+    label: "Session refusée",
+    description: "Jeton de session inconnu, expiré ou révoqué (après une déconnexion, c'est normal).",
+  },
+  { kind: "API_TOKEN_REFUSED", label: "Jeton d'API refusé", description: "Jeton personnel inconnu, expiré ou révoqué." },
+  { kind: "AUTH_RATE_LIMITED", label: "Connexions limitées", description: "Trop d'essais de connexion d'une même adresse en une minute." },
+];
+
+/** Refusals of a day above which they are worth a look */
+export const SECURITY_EVENT_THRESHOLD = 20;
+
+/** Tone of a kind of event given today's count */
+export function securityTone(kind: SecurityEventKind, today: number): Tone {
+  if (today === 0) return "ok";
+  if (kind === "REFRESH_TOKEN_REUSED") return "bad";
+  if (kind === "AUTH_RATE_LIMITED" || today >= SECURITY_EVENT_THRESHOLD) return "warn";
+  return "ok";
+}
+
+export function securityAlerts(security: Security | undefined): Alert[] {
+  if (!security) return [];
+  const found: Alert[] = [];
+  if (security.access.admins > security.adminEmails) {
+    found.push({
+      tone: "bad",
+      text: `${number(security.access.admins)} comptes administrateurs pour ${number(security.adminEmails)} adresse${security.adminEmails > 1 ? "s" : ""} prévue${security.adminEmails > 1 ? "s" : ""}`,
+      to: "/security",
+    });
+  }
+  for (const event of security.events) {
+    const tone = securityTone(event.kind, event.today);
+    if (tone !== "ok") {
+      const label = SECURITY_EVENTS.find((known) => known.kind === event.kind)?.label ?? event.kind;
+      found.push({ tone, text: `${label} : ${number(event.today)} aujourd'hui`, to: "/security" });
+    }
+  }
+  if (security.access.apiTokensExpiringSoon > 0) {
+    found.push({
+      tone: "warn",
+      text: `${number(security.access.apiTokensExpiringSoon)} jeton${security.access.apiTokensExpiringSoon > 1 ? "s" : ""} d'API expire${security.access.apiTokensExpiringSoon > 1 ? "nt" : ""} dans moins de 30 jours`,
+      to: "/security",
+    });
+  }
+  return found;
+}
+
+/** Names of the admin actions journaled by the server */
+export const ACTION_LABELS: Record<string, string> = {
+  "gtfs-import": "Importer le GTFS",
+  traffic: "Recharger l'info trafic",
+  elevators: "Recharger l'état des ascenseurs",
+  "search-index": "Reconstruire l'index de recherche",
+  "prim-circuits": "Rétablir les appels à PRIM",
+  "sessions-cleanup": "Purger les sessions",
+};

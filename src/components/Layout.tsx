@@ -13,6 +13,7 @@ const navigation = [
   { to: "/accounts", label: "Comptes" },
   { to: "/network", label: "Réseau" },
   { to: "/system", label: "Système" },
+  { to: "/security", label: "Sécurité" },
   { to: "/actions", label: "Actions" },
 ];
 
