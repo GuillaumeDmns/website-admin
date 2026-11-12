@@ -1,6 +1,9 @@
-import type { QuotaDay } from "./api/types";
+import type { QuotaDay, Security } from "./api/types";
 import {
   alerts,
+  SECURITY_EVENT_THRESHOLD,
+  securityAlerts,
+  securityTone,
   callsPerApi,
   callsPerFeature,
   metricGroups,
@@ -145,5 +148,45 @@ describe("stats", () => {
       "app.guillaumedamiens.com",
       "admin.guillaumedamiens.com",
     ]);
+  });
+});
+
+describe("security alerts", () => {
+  const security = (overrides: Partial<Security> = {}): Security => ({
+    since: "2026-10-12T08:00:00Z",
+    events: [],
+    access: { admins: 1, sessions: 3, accountsWithSession: 2, apiTokens: 1, apiTokensExpiringSoon: 0, apiTokensIdle: 0 },
+    adminEmails: 1,
+    actions: [],
+    ...overrides,
+  });
+
+  it("says nothing when all is quiet", () => {
+    expect(securityAlerts(security({ events: [{ kind: "ACCESS_DENIED", today: 3, sinceStart: 10 }] }))).toEqual([]);
+    expect(securityAlerts(undefined)).toEqual([]);
+  });
+
+  it("warns of a stolen session, an unexpected admin and many refusals", () => {
+    const found = securityAlerts(
+      security({
+        access: { admins: 2, sessions: 3, accountsWithSession: 2, apiTokens: 1, apiTokensExpiringSoon: 1, apiTokensIdle: 0 },
+        events: [
+          { kind: "REFRESH_TOKEN_REUSED", today: 1, sinceStart: 1 },
+          { kind: "JWT_REFUSED", today: SECURITY_EVENT_THRESHOLD, sinceStart: 40 },
+        ],
+      }),
+    );
+    expect(found.map((alert) => [alert.tone, alert.text])).toEqual([
+      ["bad", "2 comptes administrateurs pour 1 adresse prévue"],
+      ["bad", "Session réutilisée : 1 aujourd'hui"],
+      ["warn", "Jeton d'accès falsifié : 20 aujourd'hui"],
+      ["warn", "1 jeton d'API expire dans moins de 30 jours"],
+    ]);
+  });
+
+  it("tones each kind by today's count", () => {
+    expect(securityTone("REFRESH_TOKEN_REUSED", 0)).toBe("ok");
+    expect(securityTone("AUTH_RATE_LIMITED", 1)).toBe("warn");
+    expect(securityTone("REFRESH_TOKEN_REFUSED", SECURITY_EVENT_THRESHOLD - 1)).toBe("ok");
   });
 });

@@ -186,3 +186,4 @@ export async function request<T>(method: string, path: string, body?: unknown): 
 
 export const get = <T>(path: string) => request<T>("GET", path);
 export const post = <T>(path: string, body?: unknown) => request<T>("POST", path, body);
+export const del = <T>(path: string) => request<T>("DELETE", path);

@@ -238,3 +238,68 @@ export interface Audience {
   /** When the page log of nginx was last read, null when it isn't (development) */
   pagesReadAt: string | null;
 }
+
+/** Refused credentials and access counted by the backend (SecurityEvents.Kind) */
+export type SecurityEventKind =
+  | "GOOGLE_TOKEN_REFUSED"
+  | "REFRESH_TOKEN_REFUSED"
+  | "REFRESH_TOKEN_REUSED"
+  | "API_TOKEN_REFUSED"
+  | "JWT_REFUSED"
+  | "ACCESS_DENIED"
+  | "AUTH_RATE_LIMITED";
+
+export interface SecurityEventCount {
+  kind: SecurityEventKind;
+  /** Since midnight in Paris */
+  today: number;
+  sinceStart: number;
+}
+
+/** An admin action as the server recorded it */
+export interface AdminActionEntry {
+  at: string;
+  /** traffic, elevators, search-index, prim-circuits, sessions-cleanup, gtfs-import */
+  action: string;
+  count: number | null;
+  /** Kind of error when it failed */
+  error: string | null;
+}
+
+export interface AccessCounts {
+  admins: number;
+  sessions: number;
+  accountsWithSession: number;
+  apiTokens: number;
+  apiTokensExpiringSoon: number;
+  apiTokensIdle: number;
+}
+
+/** GET /api/admin/stats/security: in memory since the backend started */
+export interface Security {
+  since: string;
+  events: SecurityEventCount[];
+  access: AccessCounts;
+  /** Addresses that get the admin role */
+  adminEmails: number;
+  actions: AdminActionEntry[];
+}
+
+/** A personal API token of the signed-in admin, without its value */
+export interface ApiToken {
+  id: number;
+  name: string;
+  createdAt: string;
+  expiresAt: string;
+  lastUsedAt: string | null;
+}
+
+export interface NewApiToken {
+  apiToken: ApiToken;
+  /** Given this once */
+  token: string;
+}
+
+export interface Sessions {
+  active: number;
+}

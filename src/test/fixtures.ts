@@ -2,6 +2,7 @@
 
 import type {
   Accounts,
+  ApiToken,
   ApiUsage,
   Audience,
   Favorites,
@@ -9,6 +10,7 @@ import type {
   LineTraffic,
   Network,
   Quotas,
+  Security,
   Sites,
   Status,
   SystemInfo,
@@ -243,3 +245,26 @@ export const apiUsage = (): ApiUsage => ({
   ],
   callers: [{ day: today(), caller: "GUEST", requests: 700 }],
 });
+
+export const security = (): Security => ({
+  since: "2026-10-12T08:00:00Z",
+  events: [
+    { kind: "GOOGLE_TOKEN_REFUSED", today: 1, sinceStart: 3 },
+    { kind: "REFRESH_TOKEN_REFUSED", today: 2, sinceStart: 9 },
+    { kind: "REFRESH_TOKEN_REUSED", today: 0, sinceStart: 1 },
+    { kind: "API_TOKEN_REFUSED", today: 0, sinceStart: 0 },
+    { kind: "JWT_REFUSED", today: 27, sinceStart: 31 },
+    { kind: "ACCESS_DENIED", today: 4, sinceStart: 12 },
+    { kind: "AUTH_RATE_LIMITED", today: 0, sinceStart: 2 },
+  ],
+  access: { admins: 1, sessions: 64, accountsWithSession: 40, apiTokens: 2, apiTokensExpiringSoon: 0, apiTokensIdle: 1 },
+  adminEmails: 1,
+  actions: [
+    { at: "2026-10-13T09:00:00Z", action: "search-index", count: 2515, error: null },
+    { at: "2026-10-13T08:00:00Z", action: "gtfs-import", count: null, error: "AlreadyRunning" },
+  ],
+});
+
+export const apiTokens = (): ApiToken[] => [
+  { id: 7, name: "Bruno", createdAt: "2026-09-01T10:00:00Z", expiresAt: "2027-09-01T10:00:00Z", lastUsedAt: new Date().toISOString() },
+];

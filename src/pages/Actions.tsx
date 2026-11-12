@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 
 import { ApiError, post } from "../api/client";
-import type { ActionResult, CircuitStatus, GtfsImport } from "../api/types";
-import { Button, Note, PageTitle, Section, StatusBadge } from "../components/ui";
+import type { ActionResult, AdminActionEntry, CircuitStatus, GtfsImport, Security } from "../api/types";
+import { Button, Load, Note, PageTitle, Section, StatusBadge } from "../components/ui";
 import { useApi, useRefresh } from "../data";
 import { dateTime, duration, number, relative, time } from "../format";
-import { importSeconds } from "../stats";
+import { ACTION_LABELS, importSeconds } from "../stats";
 import styles from "./pages.module.css";
 
-const JOURNAL_KEY = "admin.journal";
+/** The journal this browser kept before the server's (dropped) */
+const FORMER_JOURNAL_KEY = "admin.journal";
 
 interface Entry {
   at: string;
@@ -94,12 +95,11 @@ const actions: Action[] = [
   },
 ];
 
-function storedJournal(): Entry[] {
-  try {
-    return JSON.parse(localStorage.getItem(JOURNAL_KEY) ?? "[]");
-  } catch {
-    return [];
-  }
+function journalText(entry: AdminActionEntry): string {
+  const label = ACTION_LABELS[entry.action] ?? entry.action;
+  if (entry.error === "AlreadyRunning") return `${label} : un import était déjà en cours`;
+  if (entry.error) return `${label} : échec (${entry.error})`;
+  return entry.count === null ? label : `${label} : ${number(entry.count)}`;
 }
 
 export default function Actions() {
@@ -107,10 +107,18 @@ export default function Actions() {
   const [confirming, setConfirming] = useState<string | null>(null);
   const [running, setRunning] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, Entry>>({});
-  const [journal, setJournal] = useState<Entry[]>(storedJournal);
+  const security = useApi<Security>("/api/admin/stats/security");
   const imports = useApi<GtfsImport[]>("/api/gtfs/imports?limit=1");
   const gtfsImport = imports.data?.[0] ?? null;
   const reloadImports = imports.reload;
+
+  useEffect(() => {
+    try {
+      localStorage.removeItem(FORMER_JOURNAL_KEY);
+    } catch {
+      // Nothing kept
+    }
+  }, []);
 
   // The last import, followed every 5 s while it runs
   useEffect(() => {
@@ -134,15 +142,6 @@ export default function Actions() {
     }
     setRunning(null);
     setResults((previous) => ({ ...previous, [action.id]: entry }));
-    setJournal((previous) => {
-      const next = [entry, ...previous].slice(0, 30);
-      try {
-        localStorage.setItem(JOURNAL_KEY, JSON.stringify(next));
-      } catch {
-        // Kept for this page only
-      }
-      return next;
-    });
     // The import is recorded once started, in the background
     if (action.id === "gtfs") window.setTimeout(reloadImports, 1_500);
     refreshNow();
@@ -195,20 +194,25 @@ export default function Actions() {
         </ul>
       </Section>
 
-      <Section title="Journal" id="journal" aside="Sur ce navigateur, 30 dernières actions">
-        {journal.length === 0 ? (
-          <Note>Aucune action lancée d'ici.</Note>
-        ) : (
-          <ul className={styles.alerts}>
-            {journal.map((entry) => (
-              <li key={entry.at + entry.action}>
-                <StatusBadge tone={entry.ok ? "ok" : "bad"}>
-                  {dateTime(entry.at)} · {entry.action} : {entry.text}
-                </StatusBadge>
-              </li>
-            ))}
-          </ul>
-        )}
+      <Section title="Journal" id="journal" aside="Sur le serveur, 50 dernières actions depuis son démarrage">
+        <Load resource={security} label="le journal">
+          {(data) =>
+            data.actions.length === 0 ? (
+              <Note>Aucune action depuis le démarrage du serveur.</Note>
+            ) : (
+              <ul className={styles.alerts}>
+                {data.actions.map((entry, index) => (
+                  <li key={entry.at + entry.action + index}>
+                    <StatusBadge tone={entry.error ? "bad" : "ok"}>
+                      {dateTime(entry.at)} · {journalText(entry)}
+                    </StatusBadge>
+                  </li>
+                ))}
+              </ul>
+            )
+          }
+        </Load>
+        <Note>Les journaux du serveur disent aussi quel compte a lancé chaque action.</Note>
       </Section>
     </>
   );

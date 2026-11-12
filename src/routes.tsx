@@ -8,6 +8,7 @@ import AudiencePage from "./pages/AudiencePage";
 import NetworkPage from "./pages/NetworkPage";
 import NotFound from "./pages/NotFound";
 import Overview from "./pages/Overview";
+import SecurityPage from "./pages/SecurityPage";
 import SystemPage from "./pages/SystemPage";
 import Usage from "./pages/Usage";
 
@@ -23,6 +24,7 @@ export const routes: RouteObject[] = [
       { path: "accounts", element: <AccountsPage /> },
       { path: "network", element: <NetworkPage /> },
       { path: "system", element: <SystemPage /> },
+      { path: "security", element: <SecurityPage /> },
       { path: "actions", element: <Actions /> },
       { path: "*", element: <NotFound /> },
     ],
